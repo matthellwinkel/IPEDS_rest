@@ -1,0 +1,32 @@
+buildscript {
+    ext.kotlin_version = '1.1.2'
+    ext.slf4j_version = '1.7.24'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: 'idea'
+apply plugin: 'kotlin'
+
+sourceSets {
+    main.java.srcDirs += 'src'
+    test.java.srcDirs += 'test'
+}
+
+repositories {
+    mavenCentral()
+}
+
+
+dependencies {
+    compile "com.sparkjava:spark-kotlin:1.0.0-alpha"
+    compile "org.slf4j:slf4j-simple:$slf4j_version"
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
+    compile 'org.mongodb:mongodb-driver:3.5.0'
+}
