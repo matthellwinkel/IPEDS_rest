@@ -1,3 +1,4 @@
+import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import spark.Filter
 import spark.Spark.*
@@ -6,8 +7,6 @@ import spark.Spark.*
 
 fun main(args: Array<String>) {
     port(9091)
-
-    staticFiles.location("/static")
 
     // allow routes to end in slash
     before(Filter({req, res ->
@@ -25,11 +24,15 @@ fun main(args: Array<String>) {
     }))
 
     //gzip everything
-    after(Filter({req, res ->
+    after(Filter({_, res ->
         res.header("Content-Encoding", "gzip")
     }))
 
-    val gson = GsonBuilder().serializeNulls().setPrettyPrinting().create()
+    val gson = GsonBuilder()
+                .serializeNulls()
+                .setPrettyPrinting()
+                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                .create()
 
     /**
      *  Fetch a list of Schools. We default to a max number here.
@@ -37,16 +40,10 @@ fun main(args: Array<String>) {
      */
     get("/api/v1/schools", { req, _ ->
         // set max or default
-        val max = if ("limit" in req.queryParams()) req.queryParams("limit").toInt() else 10
 
-        // read other query params to try to set search fields
-        req.queryParams().filter{ parm -> parm != "limit"}.forEach { parm ->
-            //kotlin switch is pretty useful here
-            when(parm) {
-               "test" -> println(" setting search filter: $parm")
-            }
-        }
-        FetchSchools(max)
+        FetchSchools(max = req.queryParams("limit")?.toInt() ?: 10,
+                    state = req.queryParams("state"),
+                    pattern = req.queryParams("name"))
     }, { gson.toJson(it)})
 
 
@@ -54,6 +51,8 @@ fun main(args: Array<String>) {
      *  Fetch a specific school by ID
      */
     get("/api/v1/schools/:id", { req, _ ->
-        FetchSchoolFromId(req.params(":id"))
+        val year = req.queryParams("year")
+        println("year: $year")
+        FetchSchoolFromId(req.params(":id"), year)
     }, { gson.toJson(it)})
 }
